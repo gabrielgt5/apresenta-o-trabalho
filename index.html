@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Zados • Priorização (Eisenhower + MoSCoW)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Apresentação interativa: Matriz de Eisenhower + MoSCoW para priorização de demandas (Equipe Zados)."
+    />
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        .print-bg {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900"
+  >
+    <!-- Topbar -->
+    <header
+      class="no-print sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200"
+    >
+      <div
+        class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="h-10 w-10 rounded-xl flex items-center justify-center"
+            style="background: #6e56cf22"
+          >
+            <!-- Icon Target -->
+            <svg
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#6E56CF"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="8"></circle>
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="m-0 text-[11px] uppercase tracking-widest text-slate-500">
+              Equipe Zados
+            </p>
+            <h1 class="m-0 text-base font-extrabold">Priorizar para focar</h1>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            id="btnApresentacao"
+            class="px-3 py-2 text-sm rounded-xl bg-slate-900 text-white"
+          >
+            Modo Apresentação
+          </button>
+          <button
+            id="btnOficina"
+            class="px-3 py-2 text-sm rounded-xl bg-white ring-1 ring-slate-200"
+          >
+            Modo Oficina
+          </button>
+          <button
+            id="btnPDF"
+            class="px-3 py-2 text-sm rounded-xl bg-white ring-1 ring-slate-200 flex items-center gap-2"
+            title="Imprimir / salvar PDF"
+          >
+            <!-- Icon Print -->
+            <svg
+              class="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M6 9V2h12v7"></path>
+              <path
+                d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
+              ></path>
+              <path d="M6 14h12v8H6z"></path>
+            </svg>
+            Exportar PDF
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Barra de progresso -->
+    <div class="no-print max-w-6xl mx-auto px-4 mt-4">
+      <div class="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+        <div
+          id="progress"
+          class="h-full rounded-full"
+          style="width: 0%; background: #6e56cf"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Container principal -->
+    <main class="max-w-6xl mx-auto px-4 py-6">
+      <!-- Modo Apresentação (slides) -->
+      <section
+        id="apresentacao"
+        class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+      >
+        <div id="slideRoot"></div>
+
+        <div class="mt-6 flex items-center justify-between no-print">
+          <button
+            id="btnPrev"
+            class="rounded-xl bg-white px-4 py-2 text-sm shadow-sm ring-1 ring-slate-200"
+          >
+            ← Anterior
+          </button>
+          <div id="slideIndicator" class="text-xs text-slate-500"></div>
+          <button
+            id="btnNext"
+            class="rounded-xl bg-slate-900 px-4 py-2 text-sm text-white"
+          >
+            Próximo →
+          </button>
+        </div>
+      </section>
+
+      <!-- Modo Oficina -->
+      <section id="oficina" class="hidden space-y-6">
+        <div
+          class="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm"
+        >
+          <h2 class="text-xl font-black mb-1">Oficina prática</h2>
+          <p class="text-sm text-slate-600 -mt-1 mb-4">
+            Adicione demandas e clique nelas para mover entre categorias.
+          </p>
+
+          <form id="formAdd" class="grid gap-2 md:grid-cols-5">
+            <input
+              id="taskTitle"
+              placeholder="Nova tarefa / requisito"
+              class="md:col-span-2 rounded-xl border border-slate-200 px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500"
+            />
+            <select
+              id="taskTag"
+              class="rounded-xl border border-slate-200 px-3 py-2"
+            >
+              <option value="cliente">#cliente</option>
+              <option value="tech">#tech</option>
+              <option value="mkt">#mkt</option>
+              <option value="ops">#ops</option>
+              <option value="ux">#ux</option>
+            </select>
+            <select
+              id="taskEis"
+              class="rounded-xl border border-slate-200 px-3 py-2"
+            >
+              <option value="IU">Eisenhower: Importante & Urgente</option>
+              <option value="INU">Eisenhower: Importante & Não Urgente</option>
+              <option value="NIU">Eisenhower: Não Importante & Urgente</option>
+              <option value="NINU">
+                Eisenhower: Não Importante & Não Urgente
+              </option>
+            </select>
+            <select
+              id="taskMos"
+              class="rounded-xl border border-slate-200 px-3 py-2"
+            >
+              <option value="M">MoSCoW: Must</option>
+              <option value="S">MoSCoW: Should</option>
+              <option value="C">MoSCoW: Could</option>
+              <option value="W">MoSCoW: Won't (agora)</option>
+            </select>
+            <button class="rounded-xl bg-slate-900 px-4 py-2 text-white">
+              Adicionar
+            </button>
+          </form>
+        </div>
+
+        <!-- Eisenhower (2x2) -->
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="mb-4">
+            <div class="flex items-center justify-between">
+              <h3 class="m-0 flex items-center gap-2 text-lg font-extrabold">
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"
+                  ></path>
+                </svg>
+                Matriz de Eisenhower (2×2)
+              </h3>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                style="background: #6e56cf1a; color: #6e56cf"
+                >Tempo & Foco</span
+              >
+            </div>
+            <!-- Eixos -->
+            <div class="mt-2 grid grid-cols-2 gap-4 text-[11px] text-slate-500">
+              <div class="text-center">Urgente</div>
+              <div class="text-center">Não Urgente</div>
+            </div>
+          </div>
+          <div id="boardEis" class="grid grid-cols-2 gap-4"></div>
+          <div class="mt-2 grid grid-cols-2 gap-4 text-[11px] text-slate-500">
+            <div class="text-left">Importante</div>
+            <div class="text-right">Não Importante</div>
+          </div>
+        </div>
+
+        <!-- MoSCoW (2x2) -->
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="mb-4">
+            <div class="flex items-center justify-between">
+              <h3 class="m-0 flex items-center gap-2 text-lg font-extrabold">
+                <svg
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M4 4h16v16H4zM10 4v16M14 4v16"></path>
+                </svg>
+                MoSCoW (2×2)
+              </h3>
+              <span
+                class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
+                style="background: #6e56cf1a; color: #6e56cf"
+                >Valor & Escopo</span
+              >
+            </div>
+            <!-- Eixos -->
+            <div class="mt-2 grid grid-cols-2 gap-4 text-[11px] text-slate-500">
+              <div class="text-center">Must</div>
+              <div class="text-center">Should</div>
+            </div>
+          </div>
+          <div id="boardMos" class="grid grid-cols-2 gap-4"></div>
+          <div class="mt-2 grid grid-cols-2 gap-4 text-[11px] text-slate-500">
+            <div class="text-left">Could</div>
+            <div class="text-right">Won’t (agora)</div>
+          </div>
+        </div>
+
+        <!-- Infográficos -->
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 class="text-lg font-extrabold mb-2">Infográficos rápidos</h3>
+          <div class="grid gap-4 md:grid-cols-4">
+            <div class="rounded-2xl border border-slate-200 p-4">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500">
+                Pressão Percebida
+              </p>
+              <p class="text-3xl font-black">-43%</p>
+              <p class="text-xs text-slate-500">após acordo de priorização</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 p-4">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500">
+                Lead Time Médio
+              </p>
+              <p class="text-3xl font-black">-28%</p>
+              <p class="text-xs text-slate-500">com Eisenhower + MoSCoW</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 p-4">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500">
+                Retrabalho
+              </p>
+              <p class="text-3xl font-black">-31%</p>
+              <p class="text-xs text-slate-500">via alinhamento inicial</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 p-4">
+              <p class="text-[11px] uppercase tracking-wider text-slate-500">
+                Satisfação Cliente
+              </p>
+              <p class="text-3xl font-black">+24%</p>
+              <p class="text-xs text-slate-500">com rituais de revisão</p>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-slate-500">
+            * Números ilustrativos. Substitua por métricas reais da Zados.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer hint -->
+    <div class="no-print fixed bottom-4 left-0 right-0 hidden md:block">
+      <div
+        class="mx-auto max-w-6xl bg-white/90 backdrop-blur border border-slate-200 rounded-2xl px-4 py-2 shadow-sm flex items-center justify-between text-xs text-slate-600"
+      >
+        <div class="flex items-center gap-2">
+          <!-- Icon Bolt -->
+          <svg
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />
+          </svg>
+          Use ← → para navegar • Clique nas tarefas para mover
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-1 font-semibold"
+            style="background: #6e56cf1a; color: #6e56cf"
+            >Eisenhower</span
+          >
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-1 font-semibold"
+            style="background: #22c55e1a; color: #22c55e"
+            >MoSCoW</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ---------- Estado ----------
+      const tone = {
+        primary: "#6E56CF",
+        accent: "#22c55e",
+        warn: "#f59e0b",
+        danger: "#ef4444",
+        mute: "#94a3b8",
+      };
+      let mode = "apresentacao";
+      let slideIndex = 0;
+
+      const defaultTasks = [
+        {
+          id: crypto.randomUUID(),
+          title: "Checkout com PIX",
+          tag: "cliente",
+          eisenhower: "IU",
+          moscow: "M",
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Performance do catálogo",
+          tag: "tech",
+          eisenhower: "INU",
+          moscow: "S",
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Banner sazonal",
+          tag: "mkt",
+          eisenhower: "NIU",
+          moscow: "C",
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Integração ERP",
+          tag: "ops",
+          eisenhower: "IU",
+          moscow: "M",
+        },
+        {
+          id: crypto.randomUUID(),
+          title: "Dark mode",
+          tag: "ux",
+          eisenhower: "NINU",
+          moscow: "W",
+        },
+      ];
+      let items = [...defaultTasks];
+
+      const tagChip = {
+        cliente: "#0ea5e9",
+        tech: "#8b5cf6",
+        mkt: "#f59e0b",
+        ops: "#10b981",
+        ux: "#ec4899",
+      };
+
+      // ---------- Util ----------
+      const $ = (sel) => document.querySelector(sel);
+      function setProgress() {
+        const slidesCount = slides().length;
+        const pct = Math.round(((slideIndex + 1) / slidesCount) * 100);
+        $("#progress").style.width = pct + "%";
+        $("#slideIndicator").textContent = `Slide ${
+          slideIndex + 1
+        } / ${slidesCount}`;
+      }
+      function cycle(arr, value) {
+        const i = arr.indexOf(value);
+        return arr[(i + 1) % arr.length];
+      }
+
+      // ---------- Slides (HTML strings) ----------
+      const Icon = {
+        bolt: `<svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="${tone.danger}" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>`,
+        target: `<svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="${tone.primary}" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,
+        users: `<svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="${tone.accent}" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+      };
+
+      function slides() {
+        return [
+          // CAPA
+          `
+          <div class="text-center">
+            <div class="mx-auto mb-6 h-16 w-16 rounded-2xl print-bg" style="background:${
+              tone.primary
+            }22">
+              <svg class="mx-auto h-16 w-16" viewBox="0 0 24 24" fill="none" stroke="${
+                tone.primary
+              }" stroke-width="2">
+                <circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle>
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+              </svg>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-black tracking-tight">Priorização que gera foco</h1>
+            <p class="mt-3 max-w-2xl mx-auto text-slate-600">Equipe Zados • Matriz de Eisenhower + MoSCoW • Workshop visual e interativo</p>
+            <div class="mx-auto mt-6 grid max-w-3xl grid-cols-2 gap-3 md:grid-cols-4">
+              ${badge("Urgência", tone.danger)}
+              ${badge("Valor", tone.accent)}
+              ${badge("Alinhamento", tone.warn)}
+              ${badge("Transparência", tone.primary)}
+            </div>
+          </div>
+        `,
+          // ANÁLISE
+          `
+          <div class="mx-auto">
+            <div class="mb-6 flex items-start gap-3">
+              ${Icon.bolt}
+              <div>
+                <h2 class="text-2xl md:text-4xl font-black tracking-tight">Análise do Problema</h2>
+                <p class="text-slate-600">Pressão por "tudo agora" causa confusão e baixa produtividade</p>
+              </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 class="mb-2 text-base font-bold">Cenário</h3>
+                <p>E-commerce com múltiplas demandas urgentes impostas pelo cliente. Equipe sem direção única, foco disperso e sensação de corrida infinita.</p>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 class="mb-2 text-base font-bold">Raiz do Problema</h3>
+                <p>Ausência de um processo <strong>contínuo</strong> e <strong>claro</strong> de priorização. Não há critério objetivo para decidir a ordem — tudo vira prioridade.</p>
+              </div>
+            </div>
+          </div>
+        `,
+          // SOLUÇÃO
+          `
+          <div class="mx-auto">
+            <div class="mb-6 flex items-start gap-3">
+              ${Icon.target}
+              <div>
+                <h2 class="text-2xl md:text-4xl font-black tracking-tight">Proposta de Solução</h2>
+                <p class="text-slate-600">Combinar Eisenhower (tempo & foco) com MoSCoW (valor & escopo)</p>
+              </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-3">
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 class="mb-2 text-base font-bold">1) Matriz de Eisenhower</h3>
+                <ul class="list-disc pl-5">
+                  <li><strong>Importante & Urgente</strong>: Fazer agora</li>
+                  <li><strong>Importante & Não Urgente</strong>: Agendar</li>
+                  <li><strong>Não Importante & Urgente</strong>: Delegar</li>
+                  <li><strong>Não Importante & Não Urgente</strong>: Eliminar</li>
+                </ul>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 class="mb-2 text-base font-bold">2) Técnica MoSCoW</h3>
+                <ul class="list-disc pl-5">
+                  <li><strong>Must</strong> (obrigatório)</li>
+                  <li><strong>Should</strong> (desejável)</li>
+                  <li><strong>Could</strong> (possível)</li>
+                  <li><strong>Won't (agora)</strong></li>
+                </ul>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 class="mb-2 text-base font-bold">Por que juntos?</h3>
+                <p>Eisenhower orienta <em>tempo & foco</em>; MoSCoW organiza <em>valor & escopo</em>. A combinação evita fogo cruzado e dá visibilidade a todos.</p>
+              </div>
+            </div>
+          </div>
+        `,
+          // JUSTIFICATIVA
+          `
+          <div class="mx-auto">
+            <div class="mb-6 flex items-start gap-3">
+              ${Icon.users}
+              <div>
+                <h2 class="text-2xl md:text-4xl font-black tracking-tight">Justificativa</h2>
+                <p class="text-slate-600">Foco, alinhamento, redução de pressão e adaptabilidade</p>
+              </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              ${reason(
+                "Foco & Clareza",
+                "Matriz de Eisenhower destaca o que realmente importa agora."
+              )}
+              ${reason(
+                "Alinhamento com o Cliente",
+                "Priorização construída em conjunto, expectativas claras."
+              )}
+              ${reason(
+                "Menos Pressão",
+                "Plano visível e acordado reduz urgências artificiais."
+              )}
+              ${reason(
+                "Adaptável",
+                "Revisões contínuas conforme surgem novas demandas."
+              )}
+            </div>
+          </div>
+        `,
+          // APRENDIZADOS
+          `
+          <div class="mx-auto">
+            <div class="mb-6 flex items-start gap-3">
+              <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="${tone.primary}" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+              <div>
+                <h2 class="text-2xl md:text-4xl font-black tracking-tight">Aprendizados & Acordos</h2>
+                <p class="text-slate-600">Para não voltar ao caos</p>
+              </div>
+            </div>
+            <ol class="list-decimal space-y-2 pl-6">
+              <li><strong>Processo formal</strong> de priorização desde o início.</li>
+              <li><strong>Comunicação transparente</strong> sobre impacto das urgências.</li>
+              <li><strong>Quadros visuais</strong> (Kanban) para status e alinhamento.</li>
+              <li><strong>Rituais</strong> de revisão periódica com cliente e equipe.</li>
+            </ol>
+          </div>
+        `,
+        ];
+      }
+
+      function badge(text, color) {
+        return `<span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold print-bg" style="background:${color}1A;color:${color}">${text}</span>`;
+      }
+      function reason(title, desc) {
+        return `
+        <div class="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+          <svg class="mt-1 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="${tone.accent}" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          <div>
+            <h4 class="m-0 text-sm font-bold">${title}</h4>
+            <p class="m-0 text-sm text-slate-600">${desc}</p>
+          </div>
+        </div>
+      `;
+      }
+
+      function renderSlide() {
+        $("#slideRoot").innerHTML = slides()[slideIndex];
+        setProgress();
+      }
+
+      // ---------- MATRIZES 2×2 ----------
+      const EIS_COLS = [
+        {
+          key: "IU",
+          title: "Importante & Urgente",
+          color: tone.danger,
+          hint: "Fazer agora",
+        },
+        {
+          key: "INU",
+          title: "Importante & Não Urgente",
+          color: tone.accent,
+          hint: "Agendar",
+        },
+        {
+          key: "NIU",
+          title: "Não Importante & Urgente",
+          color: tone.warn,
+          hint: "Delegar",
+        },
+        {
+          key: "NINU",
+          title: "Não Importante & Não Urgente",
+          color: tone.mute,
+          hint: "Eliminar",
+        },
+      ];
+      const MOS_COLS = [
+        { key: "M", title: "Must-have", color: tone.danger, hint: "Essencial" },
+        {
+          key: "S",
+          title: "Should-have",
+          color: tone.accent,
+          hint: "Importante",
+        },
+        { key: "C", title: "Could-have", color: tone.warn, hint: "Opcional" },
+        {
+          key: "W",
+          title: "Won't-have (agora)",
+          color: tone.mute,
+          hint: "Futuras fases",
+        },
+      ];
+
+      function taskChip(t) {
+        const dot =
+          {
+            cliente: "#0ea5e9",
+            tech: "#8b5cf6",
+            mkt: "#f59e0b",
+            ops: "#10b981",
+            ux: "#ec4899",
+          }[t.tag] || tone.primary;
+        return `
+        <button data-task="${
+          t.id
+        }" class="task group w-full flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm shadow-sm hover:shadow">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full" style="background:${dot}"></span>
+            <span class="font-medium text-slate-800">${escapeHTML(
+              t.title
+            )}</span>
+          </div>
+          <span class="text-[10px] uppercase tracking-wide text-slate-500">#${
+            t.tag
+          }</span>
+        </button>
+      `;
+      }
+
+      // Eisenhower 2×2 (ordem visual: IU | INU / NIU | NINU)
+      function renderBoardEisenhower() {
+        const root = $("#boardEis");
+        root.innerHTML = "";
+        const layout = ["IU", "INU", "NIU", "NINU"];
+        layout.forEach((key) => {
+          const cfg = EIS_COLS.find((c) => c.key === key);
+          const col = document.createElement("div");
+          col.className = "rounded-2xl border border-slate-200 bg-white p-4";
+          col.innerHTML = `
+          <div class="mb-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"></path>
+              </svg>
+              <h3 class="text-sm font-bold" style="color:${cfg.color}">${
+            cfg.title
+          }</h3>
+            </div>
+            ${badge(cfg.hint, cfg.color)}
+          </div>
+          <div class="space-y-2" id="eis-${cfg.key}"></div>
+        `;
+          root.appendChild(col);
+        });
+        items
+          .filter((t) => t.eisenhower)
+          .forEach((t) => {
+            const box = document.querySelector(`#eis-${t.eisenhower}`);
+            if (box) box.insertAdjacentHTML("beforeend", taskChip(t));
+          });
+        // clique para ciclar
+        root.querySelectorAll(".task").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-task");
+            const t = items.find((x) => x.id === id);
+            const order = ["IU", "INU", "NIU", "NINU"];
+            t.eisenhower = cycle(order, t.eisenhower);
+            renderBoardEisenhower();
+          });
+        });
+      }
+
+      // MoSCoW 2×2 (ordem visual: M | S / C | W)
+      function renderBoardMoscow() {
+        const root = $("#boardMos");
+        root.innerHTML = "";
+        const layout = ["M", "S", "C", "W"];
+        layout.forEach((key) => {
+          const cfg = MOS_COLS.find((c) => c.key === key);
+          const col = document.createElement("div");
+          col.className = "rounded-2xl border border-slate-200 bg-white p-4";
+          col.innerHTML = `
+          <div class="mb-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16v16H4zM10 4v16M14 4v16"></path>
+              </svg>
+              <h3 class="text-sm font-bold" style="color:${cfg.color}">${
+            cfg.title
+          }</h3>
+            </div>
+            ${badge(cfg.hint, cfg.color)}
+          </div>
+          <div class="space-y-2" id="mos-${cfg.key}"></div>
+        `;
+          root.appendChild(col);
+        });
+        items
+          .filter((t) => t.moscow)
+          .forEach((t) => {
+            const box = document.querySelector(`#mos-${t.moscow}`);
+            if (box) box.insertAdjacentHTML("beforeend", taskChip(t));
+          });
+        // clique para ciclar
+        root.querySelectorAll(".task").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-task");
+            const t = items.find((x) => x.id === id);
+            const order = ["M", "S", "C", "W"];
+            t.moscow = cycle(order, t.moscow);
+            renderBoardMoscow();
+          });
+        });
+      }
+
+      function renderBoards() {
+        renderBoardEisenhower();
+        renderBoardMoscow();
+      }
+
+      // ---------- Eventos UI ----------
+      $("#btnApresentacao").addEventListener("click", () => {
+        mode = "apresentacao";
+        $("#apresentacao").classList.remove("hidden");
+        $("#oficina").classList.add("hidden");
+        $("#btnApresentacao").classList.replace("bg-white", "bg-slate-900");
+        $("#btnApresentacao").classList.add("text-white");
+        $("#btnOficina").classList.remove("bg-slate-900", "text-white");
+        renderSlide();
+      });
+      $("#btnOficina").addEventListener("click", () => {
+        mode = "oficina";
+        $("#apresentacao").classList.add("hidden");
+        $("#oficina").classList.remove("hidden");
+        $("#btnOficina").classList.replace("bg-white", "bg-slate-900");
+        $("#btnOficina").classList.add("text-white");
+        $("#btnApresentacao").classList.remove("bg-slate-900", "text-white");
+        renderBoards();
+      });
+
+      $("#btnPDF").addEventListener("click", () => window.print());
+      $("#btnPrev").addEventListener("click", () => {
+        slideIndex = Math.max(0, slideIndex - 1);
+        renderSlide();
+      });
+      $("#btnNext").addEventListener("click", () => {
+        slideIndex = Math.min(slides().length - 1, slideIndex + 1);
+        renderSlide();
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (mode !== "apresentacao") return;
+        if (e.key === "ArrowLeft") {
+          slideIndex = Math.max(0, slideIndex - 1);
+          renderSlide();
+        }
+        if (e.key === "ArrowRight") {
+          slideIndex = Math.min(slides().length - 1, slideIndex + 1);
+          renderSlide();
+        }
+      });
+
+      $("#formAdd").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const title = $("#taskTitle").value.trim();
+        if (!title) return;
+        const tag = $("#taskTag").value;
+        const eisenhower = $("#taskEis").value;
+        const moscow = $("#taskMos").value;
+        items = [
+          { id: crypto.randomUUID(), title, tag, eisenhower, moscow },
+          ...items,
+        ];
+        $("#taskTitle").value = "";
+        renderBoards();
+      });
+
+      // ---------- Helpers ----------
+      function escapeHTML(s) {
+        return s.replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[m])
+        );
+      }
+
+      // ---------- Inicialização ----------
+      renderSlide(); // começa no modo apresentação
+    </script>
+  </body>
+</html>
